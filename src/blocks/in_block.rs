@@ -3,8 +3,6 @@ use crate::blocks::*;
 use work_storage::{WorkItem, TimestampedWorkItem};
 use std::sync::Arc;
 use std::sync::atomic::{Ordering, AtomicUsize};
-use std::thread::JoinHandle;
-use std::thread;
 use work_storage::{BlockingQueue, BlockingOrderedSet};
 use parking_lot::{Mutex};
 
@@ -25,7 +23,7 @@ pub struct InBlock<TInput, TCollected> {
     work_queue: Arc<BlockingQueue<TInput>>,
     ordered_work: Arc<BlockingOrderedSet<TInput>>,
     collected_items: Arc<Mutex<Vec<TCollected>>>,
-    handler: Box<FnMut() -> Box<dyn In<TInput, TCollected>>>,
+    handler: Box<dyn FnMut() -> Box<dyn In<TInput, TCollected>>>,
     ordering: OrderingMode,
     counter: AtomicUsize
 }
@@ -114,7 +112,7 @@ where
                         let collected: TCollected = info.handler.process(val, order);
                         (*collected_list).push(collected);
                     },
-                    TimestampedWorkItem(WorkItem::Dropped, order) => {
+                    TimestampedWorkItem(WorkItem::Dropped, _order) => {
                         ()
                     }
                     TimestampedWorkItem(WorkItem::Stop, _) => {
@@ -145,7 +143,7 @@ where
                         let collected: TCollected = info.handler.process(val, order);
                         (*collected_list).push(collected);
                     }
-                    TimestampedWorkItem(WorkItem::Dropped, order) => {
+                    TimestampedWorkItem(WorkItem::Dropped, _order) => {
                         next_item += 1;
                     }
                     TimestampedWorkItem(WorkItem::Stop, _) => {
@@ -160,7 +158,7 @@ where
 
 
 impl<TInput, TCollected> InBlock<TInput, TCollected> {
-    pub fn new(behavior: BlockMode, factory: Box<FnMut() -> Box<dyn In<TInput, TCollected>>>) -> InBlock<TInput, TCollected> {
+    pub fn new(behavior: BlockMode, factory: Box<dyn FnMut() -> Box<dyn In<TInput, TCollected>>>) -> InBlock<TInput, TCollected> {
         match behavior {
             BlockMode::Parallel(_) => unimplemented!("parallel inblocks not implemented"),
             BlockMode::Sequential(ordering) => InBlock {

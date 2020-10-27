@@ -24,7 +24,7 @@ pub enum BlockMode {
 
 
 pub struct MonitorLoop {
-    loop_function: Box<FnOnce() -> () + Send>
+    loop_function: Box<dyn FnOnce() -> () + Send>
 }
 
 impl MonitorLoop {

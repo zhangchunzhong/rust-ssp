@@ -2,8 +2,7 @@ use crate::blocks::*;
 use crate::work_storage::*;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::thread::JoinHandle;
-use std::thread;
+
 
 // Public API: A Input-Output node; transforms some value into another
 pub trait InOut<TInput, TOutput> {
@@ -28,7 +27,7 @@ struct InOutBlockInfo<TInput, TOutput, TCollected> {
 pub struct InOutBlock<TInput, TOutput, TCollected> {
     work_queue: Arc<BlockingQueue<TInput>>,
     next_step: Arc<Box<dyn PipelineBlock<TOutput, TCollected>>>,
-    transformer_factory: Box<FnMut() -> Box<dyn InOut<TInput, TOutput>>>,
+    transformer_factory: Box<dyn FnMut() -> Box<dyn InOut<TInput, TOutput>>>,
     replicas: i32,
 }
 
@@ -73,7 +72,7 @@ where
     pub fn new(
         next_step: Box<dyn PipelineBlock<TOutput, TCollected>>,
         transformer: BlockMode,
-        transformer_factory: Box<FnMut() -> Box<dyn InOut<TInput, TOutput>>>
+        transformer_factory: Box<dyn FnMut() -> Box<dyn InOut<TInput, TOutput>>>
     ) -> InOutBlock<TInput, TOutput, TCollected> {
         match transformer {
             BlockMode::Parallel(replicas) => {
@@ -85,7 +84,7 @@ where
    
     pub fn new_block(
         next_step: Box<dyn PipelineBlock<TOutput, TCollected>>,
-        transformer: Box<FnMut() -> Box<dyn InOut<TInput, TOutput>>>,
+        transformer: Box<dyn FnMut() -> Box<dyn InOut<TInput, TOutput>>>,
         replicas: i32,
     ) -> InOutBlock<TInput, TOutput, TCollected> {
         InOutBlock {
